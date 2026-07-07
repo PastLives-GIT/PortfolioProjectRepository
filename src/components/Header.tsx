@@ -16,7 +16,10 @@ function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+      setMobileOpen(false)
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
