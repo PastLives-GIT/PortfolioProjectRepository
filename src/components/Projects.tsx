@@ -175,7 +175,14 @@ function Projects() {
   const cooldownRef = useRef<{ until: number; id: string }>({ until: 0, id: '' })
   const mouseRef = useRef({ x: -1000, y: -1000 })
 
+  // Collapse without cooldown (click / scroll / resize)
   const handleCollapse = useCallback(() => {
+    expandedIdRef.current = null
+    setExpanded(null)
+  }, [])
+
+  // Collapse from mouseLeave — set cooldown to prevent bounce-back
+  const handleMouseLeaveCollapse = useCallback(() => {
     const id = expandedIdRef.current
     if (id) cooldownRef.current = { until: Date.now() + COOLDOWN_MS, id }
     expandedIdRef.current = null
@@ -271,6 +278,7 @@ function Projects() {
             expanded={expanded}
             items={projects}
             onCollapse={handleCollapse}
+            onMouseLeaveCollapse={handleMouseLeaveCollapse}
             t={t}
           />
         )}
@@ -283,11 +291,13 @@ function ExpandedOverlay({
   expanded,
   items,
   onCollapse,
+  onMouseLeaveCollapse,
   t,
 }: {
   expanded: { id: string; rect: CardRect }
   items: Project[]
   onCollapse: () => void
+  onMouseLeaveCollapse: () => void
   t: (en: string, zh: string) => string
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
@@ -330,7 +340,7 @@ function ExpandedOverlay({
         width: expW,
         transformOrigin: 'center top',
       }}
-      onMouseLeave={onCollapse}
+      onMouseLeave={onMouseLeaveCollapse}
     >
       <CardInner project={project} index={i} t={t} fullDesc />
     </motion.div>
