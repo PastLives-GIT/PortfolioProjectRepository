@@ -25,65 +25,7 @@ interface CardRect {
   w: number
 }
 
-function ProjectCard({
-  project,
-  index,
-  isExpanded,
-  onExpand,
-  onCollapse,
-  t,
-}: {
-  project: (typeof projects)[number]
-  index: number
-  isExpanded: boolean
-  onExpand: (rect: CardRect) => void
-  onCollapse: () => void
-  t: (en: string, zh: string) => string
-}) {
-  const cardRef = useRef<HTMLDivElement>(null)
-
-  const handleMouseEnter = () => {
-    if (cardRef.current) {
-      const r = cardRef.current.getBoundingClientRect()
-      onExpand({ x: r.left, y: r.top, w: r.width })
-    }
-  }
-
-  const handleClick = () => {
-    if (isExpanded) {
-      onCollapse()
-    } else if (cardRef.current) {
-      const r = cardRef.current.getBoundingClientRect()
-      onExpand({ x: r.left, y: r.top, w: r.width })
-    }
-  }
-
-  return (
-    <>
-      {/* Grid placeholder — always a motion.div to avoid remount on expand/collapse */}
-      <motion.div
-        ref={cardRef}
-        data-project-id={project.id}
-        variants={cardVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: '-60px' }}
-        custom={index}
-        animate={isExpanded ? { opacity: 0 } : 'visible'}
-        transition={isExpanded ? { duration: 0.15 } : { duration: 0.2 }}
-        onMouseEnter={isExpanded ? undefined : handleMouseEnter}
-        onClick={handleClick}
-        className={`rounded-2xl overflow-hidden ${
-          isExpanded
-            ? 'pointer-events-none invisible'
-            : 'cursor-pointer hover:shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-        }`}
-      >
-        <CardInner project={project} index={index} t={t} />
-      </motion.div>
-    </>
-  )
-}
+// ── Shared card inner (image + body) ──────────────────────────────
 
 function CardInner({
   project,
@@ -98,7 +40,6 @@ function CardInner({
 }) {
   return (
     <>
-      {/* Project image / placeholder */}
       <div
         className={`h-48 bg-gradient-to-br ${placeholders[index % placeholders.length]} flex items-center justify-center shrink-0`}
       >
@@ -120,7 +61,6 @@ function CardInner({
         )}
       </div>
 
-      {/* Card body */}
       <div className="p-6">
         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
           {t(project.name, project.nameZh)}
@@ -162,6 +102,115 @@ function CardInner({
   )
 }
 
+// ── Desktop: expandable card (hover → overlay) ────────────────────
+
+function ProjectCard({
+  project,
+  index,
+  isExpanded,
+  onExpand,
+  t,
+}: {
+  project: (typeof projects)[number]
+  index: number
+  isExpanded: boolean
+  onExpand: (rect: CardRect) => void
+  t: (en: string, zh: string) => string
+}) {
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseEnter = () => {
+    if (cardRef.current) {
+      const r = cardRef.current.getBoundingClientRect()
+      onExpand({ x: r.left, y: r.top, w: r.width })
+    }
+  }
+
+  return (
+    <motion.div
+      ref={cardRef}
+      data-project-id={project.id}
+      variants={cardVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-60px' }}
+      custom={index}
+      animate={isExpanded ? { opacity: 0 } : 'visible'}
+      transition={isExpanded ? { duration: 0.15 } : { duration: 0.2 }}
+      onMouseEnter={isExpanded ? undefined : handleMouseEnter}
+      className={`rounded-2xl overflow-hidden ${
+        isExpanded
+          ? 'pointer-events-none invisible'
+          : 'cursor-pointer hover:shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+      }`}
+    >
+      <CardInner project={project} index={index} t={t} />
+    </motion.div>
+  )
+}
+
+// ── Desktop: floating overlay ─────────────────────────────────────
+
+function ExpandedOverlay({
+  expanded,
+  items,
+  onCollapse,
+  onMouseLeaveCollapse,
+  t,
+}: {
+  expanded: { id: string; rect: CardRect }
+  items: Project[]
+  onCollapse: () => void
+  onMouseLeaveCollapse: () => void
+  t: (en: string, zh: string) => string
+}) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const project = items.find(p => p.id === expanded.id)!
+  const i = items.indexOf(project)
+  const { x, y, w } = expanded.rect
+  const expW = Math.min(w * 1.08, window.innerWidth - 32)
+
+  // Close on resize
+  useEffect(() => {
+    window.addEventListener('resize', onCollapse)
+    return () => window.removeEventListener('resize', onCollapse)
+  }, [onCollapse])
+
+  // Close on click outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        onCollapse()
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [onCollapse])
+
+  const centerX = x + w / 2
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 0, scale: 0.97 }}
+      animate={{ opacity: 1, y: -8, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
+      className="fixed z-40 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden shadow-2xl shadow-purple-500/20 dark:shadow-purple-500/15"
+      style={{
+        left: centerX - expW / 2,
+        top: y,
+        width: expW,
+        transformOrigin: 'center top',
+      }}
+      onMouseLeave={onMouseLeaveCollapse}
+    >
+      <CardInner project={project} index={i} t={t} fullDesc />
+    </motion.div>
+  )
+}
+
+// ── Main Projects section ─────────────────────────────────────────
+
 const COOLDOWN_MS = 150
 
 function Projects() {
@@ -171,7 +220,14 @@ function Projects() {
   const cooldownRef = useRef<{ until: number; id: string }>({ until: 0, id: '' })
   const mouseRef = useRef({ x: -1000, y: -1000 })
 
+  // Collapse without cooldown — for scroll, resize, click-outside
   const handleCollapse = useCallback(() => {
+    expandedIdRef.current = null
+    setExpanded(null)
+  }, [])
+
+  // Collapse from mouseLeave — set cooldown to prevent bounce-back
+  const handleMouseLeaveCollapse = useCallback(() => {
     const id = expandedIdRef.current
     if (id) cooldownRef.current = { until: Date.now() + COOLDOWN_MS, id }
     expandedIdRef.current = null
@@ -194,13 +250,12 @@ function Projects() {
     return () => window.removeEventListener('mousemove', onMove)
   }, [])
 
-  // On scroll: close expanded card, then check if mouse landed over another card
+  // On scroll: close expanded card, check if mouse landed on another card
   useEffect(() => {
     const onScroll = () => {
       if (!expandedIdRef.current) return
       const prevId = expandedIdRef.current
       handleCollapse()
-      // Wait one frame for DOM to update, then check what's under the mouse
       requestAnimationFrame(() => {
         const { x, y } = mouseRef.current
         if (x < 0 || y < 0) return
@@ -246,8 +301,25 @@ function Projects() {
           </span>
         </motion.h2>
 
-        {/* Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* ── Mobile / tablet cards: always full description, no expand ── */}
+        <div className="lg:hidden grid sm:grid-cols-2 gap-4 sm:gap-6">
+          {projects.map((project, i) => (
+            <motion.div
+              key={project.id}
+              variants={cardVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-60px' }}
+              custom={i}
+              className="rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            >
+              <CardInner project={project} index={i} t={t} fullDesc />
+            </motion.div>
+          ))}
+        </div>
+
+        {/* ── Desktop cards: line-clamped, hover to expand ── */}
+        <div className="hidden lg:grid lg:grid-cols-3 gap-4 sm:gap-6">
           {projects.map((project, i) => (
             <ProjectCard
               key={project.id}
@@ -255,81 +327,23 @@ function Projects() {
               index={i}
               isExpanded={expanded?.id === project.id}
               onExpand={rect => handleExpand(project.id, rect)}
-              onCollapse={handleCollapse}
               t={t}
             />
           ))}
         </div>
 
-        {/* Expanded overlay — fixed layer, doesn't affect grid layout */}
+        {/* Expanded overlay — desktop only, fixed layer */}
         {expanded && (
           <ExpandedOverlay
             expanded={expanded}
             items={projects}
             onCollapse={handleCollapse}
+            onMouseLeaveCollapse={handleMouseLeaveCollapse}
             t={t}
           />
         )}
       </div>
     </section>
-  )
-}
-
-function ExpandedOverlay({
-  expanded,
-  items,
-  onCollapse,
-  t,
-}: {
-  expanded: { id: string; rect: CardRect }
-  items: Project[]
-  onCollapse: () => void
-  t: (en: string, zh: string) => string
-}) {
-  const cardRef = useRef<HTMLDivElement>(null)
-  const project = items.find(p => p.id === expanded.id)!
-  const i = items.indexOf(project)
-  const { x, y, w } = expanded.rect
-  const expW = Math.min(w * 1.08, window.innerWidth - 32)
-
-  // Close on resize
-  useEffect(() => {
-    window.addEventListener('resize', onCollapse)
-    return () => window.removeEventListener('resize', onCollapse)
-  }, [onCollapse])
-
-  // Close on click outside the expanded card
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
-        onCollapse()
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [onCollapse])
-
-  // Position the overlay centered on the original card's horizontal midpoint,
-  // then use scale (GPU transform) for the size change — no left/width animation.
-  const centerX = x + w / 2
-
-  return (
-    <motion.div
-      ref={cardRef}
-      initial={{ opacity: 0, y: 0, scale: 0.97 }}
-      animate={{ opacity: 1, y: -8, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
-      className="fixed z-40 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden shadow-2xl shadow-purple-500/20 dark:shadow-purple-500/15"
-      style={{
-        left: centerX - expW / 2,
-        top: y,
-        width: expW,
-        transformOrigin: 'center top',
-      }}
-      onMouseLeave={onCollapse}
-    >
-      <CardInner project={project} index={i} t={t} fullDesc />
-    </motion.div>
   )
 }
 
