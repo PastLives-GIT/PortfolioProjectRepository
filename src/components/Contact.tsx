@@ -148,7 +148,7 @@ function Contact() {
                       {t('Copied!', '已复制！')}
                     </span>
                   ) : (
-                    <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500 group-hover:text-purple-400 transition-colors">
                       {t('Click to copy', '点击复制')}
                     </span>
                   )}
