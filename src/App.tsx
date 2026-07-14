@@ -6,12 +6,14 @@ import About from './components/About'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+import ParticleBackground from './components/ParticleBackground'
 
 function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+        <div className="min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-300">
+          <ParticleBackground />
           <Header />
           <Hero />
           <About />
