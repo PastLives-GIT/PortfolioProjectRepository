@@ -61,7 +61,7 @@ function CardInner({
         )}
       </div>
 
-      <div className="p-6">
+      <div className="p-6 flex flex-col flex-1">
         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
           {t(project.name, project.nameZh)}
         </h3>
@@ -77,6 +77,8 @@ function CardInner({
             </span>
           ))}
         </div>
+        {/* Spacer pushes links to the bottom */}
+        <div className="flex-1" />
         <div className="flex items-center gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
           <a href={project.githubUrl} target="_blank" rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
@@ -138,7 +140,7 @@ function ProjectCard({
       animate={isExpanded ? { opacity: 0 } : 'visible'}
       transition={isExpanded ? { duration: 0.15 } : { duration: 0.2 }}
       onMouseEnter={isExpanded ? undefined : handleMouseEnter}
-      className={`rounded-2xl overflow-hidden ${
+      className={`flex flex-col rounded-2xl overflow-hidden ${
         isExpanded
           ? 'pointer-events-none invisible'
           : 'cursor-pointer hover:shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
@@ -195,7 +197,7 @@ function ExpandedOverlay({
       initial={{ opacity: 0, y: 0, scale: 0.97 }}
       animate={{ opacity: 1, y: -8, scale: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
-      className="fixed z-40 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden shadow-2xl shadow-purple-500/20 dark:shadow-purple-500/15"
+      className="fixed z-40 flex flex-col rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden shadow-2xl shadow-purple-500/20 dark:shadow-purple-500/15"
       style={{
         left: centerX - expW / 2,
         top: y,
@@ -311,7 +313,7 @@ function Projects() {
               whileInView="visible"
               viewport={{ once: true, margin: '-60px' }}
               custom={i}
-              className="rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
+              className="flex flex-col rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
               <CardInner project={project} index={i} t={t} fullDesc />
             </motion.div>

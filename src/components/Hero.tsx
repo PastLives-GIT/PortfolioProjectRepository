@@ -15,10 +15,26 @@ function Hero() {
       id="hero"
       className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 pt-16 overflow-hidden"
     >
-      {/* Decorative background blobs */}
+      {/* Decorative background blobs — animated */}
       <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-        <div className="absolute top-1/4 left-1/4 w-48 sm:w-72 h-48 sm:h-72 bg-purple-400/20 dark:bg-purple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-pink-400/20 dark:bg-pink-600/10 rounded-full blur-3xl" />
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-48 sm:w-72 h-48 sm:h-72 bg-purple-400/30 dark:bg-purple-600/15 rounded-full blur-3xl"
+          animate={{
+            x: [0, 60, -30, 0],
+            y: [0, -40, 50, 0],
+            scale: [1, 1.3, 0.8, 1.2, 1],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-pink-400/30 dark:bg-pink-600/15 rounded-full blur-3xl"
+          animate={{
+            x: [0, -50, 40, 0],
+            y: [0, 50, -30, 0],
+            scale: [1, 1.2, 0.9, 1.4, 1],
+          }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+        />
       </div>
 
       <motion.div
