@@ -47,19 +47,27 @@ function ParticleBackground() {
   const frameRef = useRef(0)
   const paramsRef = useRef(getParams(window.innerWidth, window.innerHeight))
   const { theme } = useTheme()
+  const themeRef = useRef(theme)
+  themeRef.current = theme // sync on every render, animate loop reads this
 
   useEffect(() => {
     const canvas = canvasRef.current!
     const ctx = canvas.getContext('2d')!
-    let w = 0
-    let h = 0
+    let cssW = 0
+    let cssH = 0
 
     const resize = () => {
-      w = canvas.width = window.innerWidth
-      h = canvas.height = window.innerHeight
+      const dpr = window.devicePixelRatio || 1
+      cssW = window.innerWidth
+      cssH = window.innerHeight
+      canvas.width = cssW * dpr
+      canvas.height = cssH * dpr
+      canvas.style.width = cssW + 'px'
+      canvas.style.height = cssH + 'px'
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       // Recompute parameters on significant size change
       const oldParams = paramsRef.current
-      const newParams = getParams(w, h)
+      const newParams = getParams(cssW, cssH)
       if (newParams.count !== oldParams.count || newParams.connDist !== oldParams.connDist) {
         paramsRef.current = newParams
         initParticles(newParams)
@@ -70,8 +78,8 @@ function ParticleBackground() {
       const arr: Particle[] = []
       for (let i = 0; i < p.count; i++) {
         arr.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
+          x: Math.random() * cssW,
+          y: Math.random() * cssH,
           vx: (Math.random() - 0.5) * 0.4,
           vy: (Math.random() - 0.5) * 0.4,
           r: Math.random() * (p.dotRMax - p.dotRMin) + p.dotRMin,
@@ -124,11 +132,11 @@ function ParticleBackground() {
     }
 
     const animate = () => {
-      ctx.clearRect(0, 0, w, h)
+      ctx.clearRect(0, 0, cssW, cssH)
 
       const p = paramsRef.current
-      const isDark = theme === 'dark'
-      const dotColor = isDark ? 'rgba(168, 85, 247, 0.7)' : 'rgba(147, 51, 234, 0.55)'
+      const isDark = themeRef.current === 'dark'
+      const dotColor = isDark ? 'rgb(168, 85, 247)' : 'rgb(147, 51, 234)'
       const lineColor = (opacity: number) =>
         isDark
           ? `rgba(168, 85, 247, ${opacity})`
@@ -216,10 +224,10 @@ function ParticleBackground() {
         pt.vy *= 0.99
 
         // Wrap edges
-        if (pt.x < -10) pt.x = w + 10
-        if (pt.x > w + 10) pt.x = -10
-        if (pt.y < -10) pt.y = h + 10
-        if (pt.y > h + 10) pt.y = -10
+        if (pt.x < -10) pt.x = cssW + 10
+        if (pt.x > cssW + 10) pt.x = -10
+        if (pt.y < -10) pt.y = cssH + 10
+        if (pt.y > cssH + 10) pt.y = -10
 
         // Draw dot
         ctx.beginPath()
@@ -254,6 +262,7 @@ function ParticleBackground() {
     initParticles()
     window.addEventListener('resize', resize)
     window.addEventListener('mousemove', handleMouse, { passive: true })
+    window.addEventListener('touchstart', handleTouch, { passive: true })
     window.addEventListener('touchmove', handleTouch, { passive: true })
     window.addEventListener('touchend', handleTouchEnd)
     window.addEventListener('touchcancel', handleTouchEnd)
@@ -263,11 +272,12 @@ function ParticleBackground() {
       cancelAnimationFrame(rafRef.current)
       window.removeEventListener('resize', resize)
       window.removeEventListener('mousemove', handleMouse)
+      window.removeEventListener('touchstart', handleTouch)
       window.removeEventListener('touchmove', handleTouch)
       window.removeEventListener('touchend', handleTouchEnd)
       window.removeEventListener('touchcancel', handleTouchEnd)
     }
-  }, [theme])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <canvas
