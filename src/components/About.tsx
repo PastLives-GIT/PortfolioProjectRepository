@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useLanguage } from '../contexts/LanguageContext'
 import { skills, colorMap } from '../data/skills'
@@ -20,12 +21,14 @@ function About() {
   const { lang, t } = useLanguage()
   const paragraphs = lang === 'en' ? aboutParagraphsEn : aboutParagraphsZh
 
-  // Group skills by category
-  const grouped = skills.reduce<Record<string, typeof skills>>((acc, s) => {
-    const key = t(s.category, s.categoryZh)
-    ;(acc[key] ??= []).push(s)
-    return acc
-  }, {})
+  // Group skills by category (memoized: only recomputes when language changes)
+  const grouped = useMemo(() =>
+    skills.reduce<Record<string, typeof skills>>((acc, s) => {
+      const key = t(s.category, s.categoryZh)
+      ;(acc[key] ??= []).push(s)
+      return acc
+    }, {}),
+  [t])
 
   return (
     <section id="about" className="py-16 sm:py-24 px-4 sm:px-6">

@@ -50,17 +50,11 @@ function Hero() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mb-8"
         >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="Avatar"
-              className="w-28 h-28 rounded-full object-cover ring-4 ring-purple-500/30 shadow-xl"
-            />
-          ) : (
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold shadow-xl ring-4 ring-purple-500/20">
-              ?
-            </div>
-          )}
+          <img
+            src={avatarUrl}
+            alt="Avatar"
+            className="w-28 h-28 rounded-full object-cover ring-4 ring-purple-500/30 shadow-xl"
+          />
         </motion.div>
 
         {/* Name / Title */}

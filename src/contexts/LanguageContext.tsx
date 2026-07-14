@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useMemo, useCallback, type ReactNode } from 'react'
 
 export type Lang = 'en' | 'zh'
 
@@ -16,18 +16,23 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return (localStorage.getItem('lang') as Lang) || 'en'
   })
 
-  const toggleLang = () => {
+  const toggleLang = useCallback(() => {
     setLang(prev => {
       const next = prev === 'en' ? 'zh' : 'en'
       localStorage.setItem('lang', next)
       return next
     })
-  }
+  }, [])
 
-  const t = (en: string, zh: string) => (lang === 'en' ? en : zh)
+  const t = useCallback(
+    (en: string, zh: string) => (lang === 'en' ? en : zh),
+    [lang]
+  )
+
+  const value = useMemo(() => ({ lang, toggleLang, t }), [lang, toggleLang, t])
 
   return (
-    <LanguageContext.Provider value={{ lang, toggleLang, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   )

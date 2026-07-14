@@ -15,7 +15,6 @@ const socials = [
     ),
   },
 ]
-  // TODO: add more social links (e.g. Twitter, Zhihu) if needed
 
 function Footer() {
   const { t } = useLanguage()
@@ -36,7 +35,7 @@ function Footer() {
           {t('All rights reserved.', '保留所有权利。')}
         </p>
 
-        {/* Social links */}
+        {/* Social links — TODO: add more (e.g. Twitter, Zhihu) if needed */}
         <div className="flex items-center gap-1">
           {socials.map(social => (
             <a

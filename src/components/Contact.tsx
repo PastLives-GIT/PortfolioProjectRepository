@@ -2,21 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLanguage } from '../contexts/LanguageContext'
 
-{/*
-  TODO: Replace these placeholder contact info with your own.
-  请将以下联系信息替换为你自己的内容。
-*/}
 const contactEmail = 'liu20060309@outlook.com'
-
-interface ContactItem {
-  id: string
-  label: string
-  labelZh: string
-  value: string
-  href?: string
-  copy?: boolean
-  icon: React.ReactNode
-}
 
 const iconCls = 'w-5 h-5'
 
@@ -44,6 +30,35 @@ function ExternalLinkIcon() {
   )
 }
 
+// Pre-built contact items (outside component to avoid recreation)
+// TODO: add more links (e.g. LinkedIn) if needed
+interface ContactItem {
+  id: string
+  label: string
+  labelZh: string
+  value: string
+  href?: string
+  copy?: boolean
+  icon: React.ReactNode
+}
+
+const contactItems: ContactItem[] = [
+  {
+    id: 'email',
+    label: 'Email', labelZh: '邮箱',
+    value: contactEmail,
+    copy: true,
+    icon: <EmailIcon />,
+  },
+  {
+    id: 'github',
+    label: 'GitHub', labelZh: 'GitHub',
+    value: 'github.com/PastLives-GIT',
+    href: 'https://github.com/PastLives-GIT',
+    icon: <GitHubIcon />,
+  },
+]
+
 const itemVariants = {
   hidden: { opacity: 0, x: -20 },
   visible: (i: number) => ({
@@ -63,37 +78,9 @@ function Contact() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback: select the text for manual copy
-      const input = document.createElement('input')
-      input.value = contactEmail
-      document.body.appendChild(input)
-      input.select()
-      document.execCommand('copy')
-      document.body.removeChild(input)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      // Clipboard API unavailable — silently ignore
     }
   }
-
-  // TODO: add more contact links (e.g. LinkedIn, Twitter) if needed
-  const items: ContactItem[] = [
-    {
-      id: 'email',
-      label: 'Email',
-      labelZh: '邮箱',
-      value: contactEmail,
-      copy: true,
-      icon: <EmailIcon />,
-    },
-    {
-      id: 'github',
-      label: 'GitHub',
-      labelZh: 'GitHub',
-      value: 'github.com/PastLives-GIT',
-      href: 'https://github.com/PastLives-GIT',
-      icon: <GitHubIcon />,
-    },
-  ]
 
   return (
     <section id="contact" className="py-16 sm:py-24 px-4 sm:px-6">
@@ -118,7 +105,7 @@ function Contact() {
           viewport={{ once: true }}
           className="rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden shadow-sm"
         >
-          {items.map((item, i) => (
+          {contactItems.map((item, i) => (
             <motion.div
               key={item.id}
               variants={itemVariants}
