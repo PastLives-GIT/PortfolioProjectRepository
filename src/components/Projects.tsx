@@ -41,12 +41,16 @@ function ProjectCard({
   t: (en: string, zh: string) => string
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
+  // Detect device hover capability: mice can hover, touchscreens can't.
+  // On hybrid devices (e.g. Surface), hover works so we prefer it.
+  const canHover = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches
+  )
 
   const handleMouseEnter = () => {
-    if (cardRef.current) {
-      const r = cardRef.current.getBoundingClientRect()
-      onExpand({ x: r.left, y: r.top, w: r.width })
-    }
+    if (!canHover.current || !cardRef.current) return
+    const r = cardRef.current.getBoundingClientRect()
+    onExpand({ x: r.left, y: r.top, w: r.width })
   }
 
   const handleClick = () => {
@@ -71,7 +75,7 @@ function ProjectCard({
         custom={index}
         animate={isExpanded ? { opacity: 0 } : 'visible'}
         transition={isExpanded ? { duration: 0.15 } : { duration: 0.2 }}
-        onMouseEnter={isExpanded ? undefined : handleMouseEnter}
+        onMouseEnter={isExpanded || !canHover.current ? undefined : handleMouseEnter}
         onClick={handleClick}
         className={`rounded-2xl overflow-hidden ${
           isExpanded
