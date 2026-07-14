@@ -5,7 +5,7 @@ const heroName = 'Liu Junqi'
 const heroNameZh = '刘珺琦'
 const heroTitle = 'Data Science & Big Data Technology Student'
 const heroTitleZh = '数据科学与大数据技术专业学生'
-const avatarUrl = '' // 替换为你的头像路径，例如 '/avatar.jpg'
+const avatarUrl = import.meta.env.BASE_URL + 'avatar.png'
 
 function Hero() {
   const { t } = useLanguage()
