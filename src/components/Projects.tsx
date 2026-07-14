@@ -41,19 +41,31 @@ function ProjectCard({
   t: (en: string, zh: string) => string
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
-  // Detect device hover capability: mice can hover, touchscreens can't.
-  // On hybrid devices (e.g. Surface), hover works so we prefer it.
-  const canHover = useRef(
-    typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches
+  // Touch devices fire synthetic mouseenter before click, causing an expand→collapse
+  // flash. We defer hover expansion on touch devices so click can cancel the timer.
+  // Desktop mice (fine pointer) expand immediately.
+  const hasFinePointer = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches
   )
+  const hoverTimerRef = useRef<number>(0)
 
   const handleMouseEnter = () => {
-    if (!canHover.current || !cardRef.current) return
+    if (!cardRef.current) return
     const r = cardRef.current.getBoundingClientRect()
-    onExpand({ x: r.left, y: r.top, w: r.width })
+    if (hasFinePointer.current) {
+      // Desktop mouse — expand immediately
+      onExpand({ x: r.left, y: r.top, w: r.width })
+    } else {
+      // Touch device — defer; if click follows, it cancels and handles expansion
+      clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = window.setTimeout(() => {
+        onExpand({ x: r.left, y: r.top, w: r.width })
+      }, 80)
+    }
   }
 
   const handleClick = () => {
+    clearTimeout(hoverTimerRef.current)
     if (isExpanded) {
       onCollapse()
     } else if (cardRef.current) {
@@ -75,7 +87,7 @@ function ProjectCard({
         custom={index}
         animate={isExpanded ? { opacity: 0 } : 'visible'}
         transition={isExpanded ? { duration: 0.15 } : { duration: 0.2 }}
-        onMouseEnter={isExpanded || !canHover.current ? undefined : handleMouseEnter}
+        onMouseEnter={isExpanded ? undefined : handleMouseEnter}
         onClick={handleClick}
         className={`rounded-2xl overflow-hidden ${
           isExpanded
